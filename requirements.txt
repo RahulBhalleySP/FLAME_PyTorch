@@ -3,7 +3,6 @@ torch
 torchvision
 setuptools
 chumpy
-PyOpenGL>=3.1.5
 pyrender
 trimesh>=3.9.0
 smplx

@@ -19,6 +19,10 @@ More information about FLAME is available at http://flame.is.tue.mpg.de.
 For questions regarding the PyTorch implementation please contact soubhik.sanyal@tuebingen.mpg.de
 """
 
+import os
+
+os.environ["PYOPENGL_PLATFORM"] = "osmesa"
+
 import numpy as np
 import pyrender
 import torch
@@ -86,4 +90,22 @@ for i in range(8):
     tfs[:, :3, 3] = joints
     joints_pcl = pyrender.Mesh.from_trimesh(sm, poses=tfs)
     scene.add(joints_pcl)
-    pyrender.Viewer(scene, use_raymond_lighting=True)
+
+    camera = pyrender.PerspectiveCamera(yfov=np.pi / 3.0)
+    camera_pose = np.array([
+        [1.0, 0.0, 0.0, 0.0],
+        [0.0, 1.0, 0.0, 0.0],
+        [0.0, 0.0, 1.0, 0.3],
+        [0.0, 0.0, 0.0, 1.0],
+    ])
+    scene.add(camera, pose=camera_pose)
+    light = pyrender.DirectionalLight(color=np.ones(3), intensity=3.0)
+    scene.add(light, pose=camera_pose)
+
+    r = pyrender.OffscreenRenderer(viewport_width=800, viewport_height=600)
+    color, _ = r.render(scene)
+    r.delete()
+
+    from PIL import Image
+    Image.fromarray(color).save(f"output_{i}.png")
+    print(f"Saved output_{i}.png")

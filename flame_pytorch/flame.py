@@ -28,6 +28,19 @@ For questions regarding the PyTorch implementation please contact soubhik.sanyal
 import pickle
 
 import numpy as np
+
+# Chumpy (used in FLAME model pickle files) relies on NumPy type aliases
+# that were removed in NumPy 1.24. Restore them before any pickle.load calls.
+for _attr, _replacement in [
+    ("bool", np.bool_),
+    ("int", np.int_),
+    ("float", np.float64),
+    ("complex", np.complex128),
+    ("object", object),
+    ("str", np.str_),
+]:
+    if not hasattr(np, _attr):
+        setattr(np, _attr, _replacement)
 import torch
 import torch.nn as nn
 from smplx.lbs import batch_rodrigues, lbs, vertices2landmarks

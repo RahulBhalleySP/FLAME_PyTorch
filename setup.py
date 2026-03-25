@@ -71,8 +71,6 @@ CONFIG = {
     ),
     "install_requires": list(get_requires()),
     "python_requires": ">=3.8,<4.0",
-    "test_suite": "tests",
-    "tests_require": ["pytest>=3"],
     "include_package_data": True,
 }
 

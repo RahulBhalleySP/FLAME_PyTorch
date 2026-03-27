@@ -31,16 +31,19 @@ import numpy as np
 
 # Chumpy (used in FLAME model pickle files) relies on NumPy type aliases
 # that were removed in NumPy 1.24. Restore them before any pickle.load calls.
-for _attr, _replacement in [
-    ("bool", np.bool_),
-    ("int", np.int_),
-    ("float", np.float64),
-    ("complex", np.complex128),
-    ("object", object),
-    ("str", np.str_),
-]:
-    if not hasattr(np, _attr):
-        setattr(np, _attr, _replacement)
+import warnings as _warnings
+with _warnings.catch_warnings():
+    _warnings.simplefilter("ignore")
+    for _attr, _replacement in [
+        ("bool", np.bool_),
+        ("int", np.int_),
+        ("float", np.float64),
+        ("complex", np.complex128),
+        ("object", object),
+        ("str", np.str_),
+    ]:
+        if not hasattr(np, _attr):
+            setattr(np, _attr, _replacement)
 import torch
 import torch.nn as nn
 from smplx.lbs import batch_rodrigues, lbs, vertices2landmarks
@@ -57,7 +60,9 @@ class FLAME(nn.Module):
         super(FLAME, self).__init__()
         print("creating the FLAME Decoder")
         with open(config.flame_model_path, "rb") as f:
-            self.flame_model = Struct(**pickle.load(f, encoding="latin1"))
+            with _warnings.catch_warnings():
+                _warnings.simplefilter("ignore")
+                self.flame_model = Struct(**pickle.load(f, encoding="latin1"))
         self.NECK_IDX = 1
         self.batch_size = config.batch_size
         self.dtype = torch.float32
@@ -149,7 +154,9 @@ class FLAME(nn.Module):
         # Static and Dynamic Landmark embeddings for FLAME
 
         with open(config.static_landmark_embedding_path, "rb") as f:
-            static_embeddings = Struct(**pickle.load(f, encoding="latin1"))
+            with _warnings.catch_warnings():
+                _warnings.simplefilter("ignore")
+                static_embeddings = Struct(**pickle.load(f, encoding="latin1"))
 
         lmk_faces_idx = (static_embeddings.lmk_face_idx).astype(np.int64)
         self.register_buffer(
@@ -161,11 +168,13 @@ class FLAME(nn.Module):
         )
 
         if self.use_face_contour:
-            conture_embeddings = np.load(
-                config.dynamic_landmark_embedding_path,
-                allow_pickle=True,
-                encoding="latin1",
-            )
+            with _warnings.catch_warnings():
+                _warnings.simplefilter("ignore")
+                conture_embeddings = np.load(
+                    config.dynamic_landmark_embedding_path,
+                    allow_pickle=True,
+                    encoding="latin1",
+                )
             conture_embeddings = conture_embeddings[()]
             dynamic_lmk_faces_idx = np.array(conture_embeddings["lmk_face_idx"]).astype(
                 np.int64
